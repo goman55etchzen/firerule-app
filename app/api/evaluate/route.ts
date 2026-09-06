@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
 import { evaluateRoom, RoomInput } from '@/lib/fireRules';
-import { db } from '@/lib/db';
-import { calculationLogs, detectors } from '@/lib/db/schema';
-import { eq, gte } from 'drizzle-orm';
 
 export async function POST(request: Request) {
   try {
@@ -13,17 +10,17 @@ export async function POST(request: Request) {
       room: RoomInput;
     };
 
-    // 1. 消防法ロジックによる基本判定
+    // 1. 消防法ロジックによる基本判定（DB不要で計算可能）
     const evalResult = evaluateRoom(categoryCode, room);
 
-    // 2. Neon DB から条件を満たす推奨型番の検索（例: 適用天井高以上の機器）
+    // TODO: DB作成・マイグレーション完了後に以下のDB処理を有効化する
+    /*
     const matchedDetectors = await db
       .select()
       .from(detectors)
       .where(gte(detectors.maxHeight, room.ceilingHeight))
       .limit(3);
 
-    // 3. 判定ログを DB に保存
     await db.insert(calculationLogs).values({
       projectName: projectName || '未設定物件',
       roomName: room.name,
@@ -32,16 +29,30 @@ export async function POST(request: Request) {
       recommendedDetector: evalResult.detectorType,
       requiredCount: evalResult.requiredCount,
     });
+    */
+
+    // DB未接続時のダミー機器データ
+    const dummyProducts = [
+      {
+        id: 1,
+        modelNumber: 'SLV-2（ダミー型番）',
+        maker: 'ホーチキ',
+        type: evalResult.detectorType,
+        maxHeight: 15.0,
+        coverageFireproof: 150,
+        coverageNonFireproof: 75,
+      },
+    ];
 
     return NextResponse.json({
       success: true,
       result: evalResult,
-      suggestedProducts: matchedDetectors, // DBから検索されたメーカー・型番候補
+      suggestedProducts: dummyProducts,
     });
   } catch (error) {
-    console.error('Database/API Error:', error);
+    console.error('API Error:', error);
     return NextResponse.json(
-      { success: false, message: '判定またはデータ保存に失敗しました。' },
+      { success: false, message: '判定に失敗しました。' },
       { status: 500 }
     );
   }
