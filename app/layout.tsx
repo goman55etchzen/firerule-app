@@ -1,7 +1,15 @@
 import './globals.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 
-// PWA・メタデータ設定（Next.js 13.5 互換）
+// Viewport 設定（Next.js 14 以降の仕様）
+export const viewport: Viewport = {
+  themeColor: '#0f172a',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
+// PWA・メタデータ設定
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
@@ -9,12 +17,6 @@ export const metadata: Metadata = {
   title: '消防用感知器 自動選定システム',
   description:
     '消防法に基づき、部屋の条件から適切な感知器と必要数量を自動算定します。',
-  themeColor: '#0f172a',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-  },
   manifest: '/manifest.webmanifest',
   icons: {
     icon: [
